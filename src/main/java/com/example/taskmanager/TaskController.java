@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 
@@ -42,5 +43,14 @@ public class TaskController {
   public Task updateTask(@PathVariable Long id, @RequestBody UpdateTaskRequest request) {
     return taskService.updateTask(id, request)
     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+  }
+
+  @DeleteMapping("/{id}")
+  public void deleteTask(@PathVariable Long id) {
+    boolean deleted = taskService.deleteTask(id);
+
+    if(!deleted) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
   }
 }

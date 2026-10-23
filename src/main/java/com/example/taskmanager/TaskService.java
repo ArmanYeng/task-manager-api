@@ -44,4 +44,8 @@ public class TaskService {
 
     return Optional.of(task);
   }
+
+  public boolean deleteTask(Long id) {
+    return tasks.removeIf(task -> task.getId().equals(id));
+  }
 }
