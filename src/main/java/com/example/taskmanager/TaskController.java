@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
@@ -29,7 +31,7 @@ public class TaskController {
   }
 
   @PostMapping
-  public Task CreateTask(@RequestBody CreateTaskRequest request) {
+  public Task CreateTask(@Valid @RequestBody CreateTaskRequest request) {
     return taskService.createTask(request);
   }
 
@@ -40,7 +42,7 @@ public class TaskController {
   }
 
   @PutMapping("/{id}")
-  public Task updateTask(@PathVariable Long id, @RequestBody UpdateTaskRequest request) {
+  public Task updateTask(@PathVariable Long id, @Valid @RequestBody UpdateTaskRequest request) {
     return taskService.updateTask(id, request)
     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }

@@ -1,6 +1,9 @@
 package com.example.taskmanager;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class UpdateTaskRequest {
+  @NotBlank(message = "Title must not be blank")
   private String title;
   private boolean completed;
 

@@ -1,9 +1,20 @@
 package com.example.taskmanager;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+
+@Entity
 public class Task {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private String title;
   private boolean completed;
+
+  public Task() {}
 
   public Task(Long id, String title) {
     this.id = id;
@@ -30,6 +41,4 @@ public class Task {
   public void setCompleted(boolean completed) {
     this.completed = completed;
   }
-
-  
 }
