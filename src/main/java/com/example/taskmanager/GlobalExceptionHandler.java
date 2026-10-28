@@ -25,4 +25,20 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
+
+  @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+  public ResponseEntity<Map<String, String>> handleResponseStatusException(
+    org.springframework.web.server.ResponseStatusException exception) {
+
+      HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+
+      Map<String, String> error = Map.of(
+        "error", status.getReasonPhrase(),
+        "message", exception.getReason() != null
+        ? exception.getReason()
+        : status.getReasonPhrase()
+      );
+
+      return ResponseEntity.status(status).body(error);
+    }
 }

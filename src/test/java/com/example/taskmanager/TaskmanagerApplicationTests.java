@@ -17,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class TaskmanagerApplicationTests {
@@ -78,5 +80,142 @@ class TaskmanagerApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Learn Spring Boot"))
                 .andExpect(jsonPath("$.completed").value(true));
+    }
+
+    @Test
+    void deleteTaskRemovesTask() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Task to delete\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String response = createResult.getResponse().getContentAsString();
+        String idString = response.replaceAll(".*\"id\"\\s*:\\s*(\\d+).*", "$1");
+        long id = Long.parseLong(idString);
+
+        mockMvc.perform(delete("/tasks/" + id))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/tasks/" + id))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateNonexistentTaskReturnsNotFound() throws Exception {
+        String json = """
+                {
+                "title": "Updated task",
+                "completed": true
+                }
+                """;
+
+        mockMvc.perform(put("/tasks/999999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    void deleteNonexistentTaskReturnsNotFound() throws Exception {
+        mockMvc.perform(delete("/tasks/999999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateTaskWithBlankTitleReturnsBadRequest() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "title": "Original task"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String response = createResult.getResponse().getContentAsString();
+        String idString = response.replaceAll(".*\"id\"\\s*:\\s*(\\d+).*", "$1");
+        long id = Long.parseLong(idString);
+
+        mockMvc.perform(put("/tasks/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "title": "   ",
+                            "completed": true
+                        }
+                        """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Validation failed"));
+    }
+
+    @Test
+    void getAllTasksIncludesCreatedTask() throws Exception {
+        mockMvc.perform(post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "title": "Verify task appears in list"
+                        }
+                        """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/tasks"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].title")
+                        .value(org.hamcrest.Matchers.hasItem("Verify task appears in list")));
+    }
+
+    @Test
+    void healthEndpointReturnsUp() throws Exception {
+        mockMvc.perform(get("/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
+    void nonexistentTaskReturnsStructuredError() throws Exception {
+        mockMvc.perform(get("/tasks/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void patchMarksTaskAsCompleted() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "title": "Finish my project"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String response = createResult.getResponse().getContentAsString();
+        String idString = response.replaceAll(".*\"id\"\\s*:\\s*(\\d+).*", "$1");
+        long id = Long.parseLong(idString);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .patch("/tasks/" + id + "/complete"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Finish my project"))
+                .andExpect(jsonPath("$.completed").value(true));
+
+        mockMvc.perform(get("/tasks/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").value(true));
+
+    }
+
+    @Test
+    void patchNonexistentTaskReturnsNotFound() throws Exception {
+        mockMvc.perform(
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/tasks/999999/complete"))
+                .andExpect(status().isNotFound());
     }
 }

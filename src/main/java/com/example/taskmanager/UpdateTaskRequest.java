@@ -11,6 +11,11 @@ public class UpdateTaskRequest {
 
   }
 
+  public UpdateTaskRequest(String title, boolean completed) {
+    this.title = title;
+    this.completed = completed;
+  }
+
   public String getTitle() {
     return title;
   }
