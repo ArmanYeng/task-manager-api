@@ -9,7 +9,7 @@ public class TaskService {
 
   private final TaskRepository taskRepository;
 
-  public TaskService (TaskRepository taskRepository) {
+  public TaskService(TaskRepository taskRepository) {
     this.taskRepository = taskRepository;
   }
 
@@ -30,7 +30,7 @@ public class TaskService {
   public Optional<Task> updateTask(Long id, UpdateTaskRequest request) {
     Optional<Task> optionalTask = taskRepository.findById(id);
 
-    if(optionalTask.isEmpty()) {
+    if (optionalTask.isEmpty()) {
       return Optional.empty();
     }
 
@@ -42,8 +42,21 @@ public class TaskService {
     return Optional.of(taskRepository.save(task));
   }
 
+  public Optional<Task> markTaskAsCompleted(Long id) {
+    Optional<Task> optionalTask = taskRepository.findById(id);
+
+    if (optionalTask.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Task task = optionalTask.get();
+    task.setCompleted(true);
+
+    return Optional.of(taskRepository.save(task));
+  }
+
   public boolean deleteTask(Long id) {
-    if(!taskRepository.existsById(id)) {
+    if (!taskRepository.existsById(id)) {
       return false;
     }
 
